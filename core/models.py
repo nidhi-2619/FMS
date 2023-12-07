@@ -34,8 +34,10 @@ class UserManager(BaseUserManager):
 
         return user
 
+
 class User(AbstractBaseUser, PermissionsMixin):
     """User in the system."""
+    id = models.IntegerField(primary_key=True, auto_created=True)
     email = models.EmailField(max_length=255, unique=True)
     name = models.CharField(max_length=255)
     is_active = models.BooleanField(default=True)
@@ -44,3 +46,24 @@ class User(AbstractBaseUser, PermissionsMixin):
     objects = UserManager()
 
     USERNAME_FIELD = 'email'
+
+
+class File(models.Model):
+    """File to be uploaded."""
+    file = models.FileField(upload_to='uploads/')
+    name = models.CharField(max_length=255)
+    description = models.CharField(max_length=255)
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+    )
+
+
+    def set_file(self, file):
+        """Set file and return it."""
+        self.file = file
+        return self.file
+
+    def __str__(self):
+        """Return string representation of the file."""
+        return f'{self.name} | { self.user} |  {self.file.file.size}'
