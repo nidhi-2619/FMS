@@ -48,9 +48,15 @@ class UserAdmin(BaseUserAdmin):
 
 class FileAdmin(admin.ModelAdmin):
     """Customising recipe admin  to display other fields"""
-    list_display = ('file', 'user, 'file')
+    list_display = ('file', 'user', 'created_at', 'size')
 
     def active(self, obj):
         return obj.is_active == 1
 
     active.boolean = True
+
+
+
+
+admin.site.register(models.User, UserAdmin)
+admin.site.register(models.File, FileAdmin)

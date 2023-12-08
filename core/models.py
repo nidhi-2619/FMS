@@ -2,10 +2,13 @@
 Database models.
 """
 import uuid
-import os
-
+import os,magic
+from datetime import datetime
 from django.conf import settings
 from django.db import models
+from django.db.models.signals import post_delete
+from django.dispatch import receiver
+from django.utils.translation import gettext_lazy as _
 from django.contrib.auth.models import (
     AbstractBaseUser,
     BaseUserManager,
@@ -37,7 +40,7 @@ class UserManager(BaseUserManager):
 
 class User(AbstractBaseUser, PermissionsMixin):
     """User in the system."""
-    id = models.IntegerField(primary_key=True, auto_created=True)
+    id = models.AutoField(primary_key=True, auto_created=True)
     email = models.EmailField(max_length=255, unique=True)
     name = models.CharField(max_length=255)
     is_active = models.BooleanField(default=True)
@@ -47,17 +50,16 @@ class User(AbstractBaseUser, PermissionsMixin):
 
     USERNAME_FIELD = 'email'
 
-
 class File(models.Model):
-    """File to be uploaded."""
-    file = models.FileField(upload_to='uploads/')
-    name = models.CharField(max_length=255)
-    description = models.CharField(max_length=255)
+
     user = models.ForeignKey(
-        settings.AUTH_USER_MODEL,
+        settings.AUTH_USER_MODEL.name,
+        settings.AUTH_USER_MODEL.email,
         on_delete=models.CASCADE,
     )
-
+    file = models.FileField(upload_to='uploads/')
+    created_at = models.DateTimeField(default=datetime.now())
+    timestamp = models.DateTimeField(auto_now=True)
 
     def set_file(self, file):
         """Set file and return it."""
@@ -66,4 +68,4 @@ class File(models.Model):
 
     def __str__(self):
         """Return string representation of the file."""
-        return f'{self.name} | { self.user} |  {self.file.file.size}'
+        return f'{self.file.name} | { self.user} |  {self.created_at} '
