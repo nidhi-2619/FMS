@@ -8,22 +8,30 @@ from django.contrib.auth import (
 from django.utils.translation import gettext as _
 from rest_framework import serializers
 from core.models import File
-import magic
+import os
+USER = get_user_model()
 
 class FileSerializer(serializers.ModelSerializer):
     """Serializer for the file object."""
-    name = serializers.CharField(source='file.name', read_only=True)
+    name = serializers.SerializerMethodField('get_name')
     size = serializers.SerializerMethodField('get_size')
-    file_type = serializers.SerializerMethodField('get_file_type')
+    # file_type = serializers.SerializerMethodField('get_file_type')
+    # filepath = serializers.SerializerMethodField('get_filepath')
 
     class Meta:
         model = File
-        fields = ['file', 'size', 'user', 'created_at', 'name', 'file_type']
-        extra_kwargs = {'file': {'write_only': True},'created_at': {'read_only': True}, 'size': {'read_only': True}, 'user': {'read_only': True}}
+        fields = ['file', 'size', 'created_at', 'name']
+        extra_kwargs = {
+            'file': {'write_only': True},
+            'created_at': {'read_only': True},
+            'size': {'read_only': True},
+            'user': {'read_only': True}
+        }
 
     def create(self, validated_data):
-        """Create and return a file with encrypted password"""
-        return File.objects.create(**validated_data)
+        """Set the user when creating a new File instance"""
+        validated_data['user'] = self.context['request'].user
+        return super().create(validated_data)
 
     def update(self, instance, validated_data):
         """Update and return a file."""
@@ -41,6 +49,8 @@ class FileSerializer(serializers.ModelSerializer):
         return obj.file.size
 
     @staticmethod
-    def get_file_type(obj):
-        return magic.from_buffer(obj.file.read(1024), mime=True)
-
+    def get_name(obj):
+        return obj.file.name.split('/')[-1]
+    # @staticmethod
+    # def get_file_type(obj):
+    #     return magic.from_buffer(obj.file.read(1024), mime=True)

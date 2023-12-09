@@ -2,7 +2,7 @@
 Database models.
 """
 import uuid
-import os,magic
+import os
 from datetime import datetime
 from django.conf import settings
 from django.db import models
@@ -53,8 +53,7 @@ class User(AbstractBaseUser, PermissionsMixin):
 class File(models.Model):
 
     user = models.ForeignKey(
-        settings.AUTH_USER_MODEL.name,
-        settings.AUTH_USER_MODEL.email,
+        settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
     )
     file = models.FileField(upload_to='uploads/')

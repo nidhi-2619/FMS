@@ -12,6 +12,10 @@ python-dotenv = "^1.0.0"
 djangorestframework = "^3.14.0"
 drf-spectacular = "^0.26.5"
 mysqlclient = "^2.2.0"
+django-cors-headers = "^4.3.1"
+python-magic = "^0.4.27"
+libmagic = "^1.0"
+
 
 
 
