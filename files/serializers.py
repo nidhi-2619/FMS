@@ -6,6 +6,7 @@ from django.contrib.auth import (
     authenticate,
 )
 from django.utils.translation import gettext as _
+from django.core.files.uploadedfile import InMemoryUploadedFile
 from rest_framework import serializers
 from core.models import File
 import os
@@ -50,7 +51,7 @@ class FileSerializer(serializers.ModelSerializer):
 
     @staticmethod
     def get_name(obj):
-        return obj.file.name.split('/')[-1]
+        return obj.file.name.split('\\')[-1]
     # @staticmethod
     # def get_file_type(obj):
     #     return magic.from_buffer(obj.file.read(1024), mime=True)

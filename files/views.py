@@ -44,7 +44,7 @@ class ShowFilesView(generics.ListAPIView):
         instance = self.get_object()
         file_handle = instance.file.open()
 
-        response = FileResponse(file_handle, content_type='whatever')
+        response = FileResponse(file_handle, as_attachment=True, filename=instance.file.name.split('/')[-1])
         response['Content-Length'] = instance.file.size
         response['Content-Disposition'] = 'attachment; filename="%s"' % instance.file.name
 
@@ -61,17 +61,22 @@ class UploadFileView(generics.CreateAPIView):
 
     def post(self, request, *args, **kwargs):
         file = request.data.get('file')
+
         if file:
             data = File.objects.create(
                 user=request.user,
-                file=file
+                file=file,
             )
             data.save()
 
         return Response(
             {'message': 'File uploaded successfully.',
-             'data': FileSerializer(file).data
+             'data': {
+                 data.file.name.split('/')[-1],
              },
+             },
+
+            content_type='application/json',
             status=status.HTTP_201_CREATED)
 
 
@@ -81,12 +86,37 @@ class ManageFileView(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = FileSerializer
     authentication_classes = [authentication.TokenAuthentication]
     permission_classes = [permissions.IsAuthenticated]
-    queryset = File.objects.all()
 
     def get_queryset(self):
         """Return objects for the current authenticated user only."""
-        return self.queryset.filter(user=self.request.user)
+        return self.queryset.filter(user=self.request.user).order_by('-created_at')
 
     def perform_update(self, serializer):
         """Update the file."""
-        serializer.save(user=self.request.user)
+        serializer.save(user=self.request.user, file=self.request.data.get('file'))
+
+    def perform_destroy(self, instance):
+        """Delete the file."""
+        if instance.file:
+            instance.file.delete()
+            instance.delete()
+            return Response(
+                {'message': 'File deleted successfully.',
+                 'data': {
+                     instance.file.name.split('/')[-1],
+                 },
+                 },
+
+                content_type='application/json',
+                status=status.HTTP_200_OK)
+        return Response(
+            {'message': 'File not found.',
+             'data': {
+                 instance.file.name.split('/')[-1],
+             },
+             },
+
+            content_type='application/json',
+            status=status.HTTP_404_NOT_FOUND)
+
+
